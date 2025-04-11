@@ -29,7 +29,7 @@ public class IndexModel : PageModel
             .OrderByDescending(i => i.PublishDate)
             .ToList();
 
-
+        //Логика поиска
         if (!string.IsNullOrEmpty(searchQuery))
         {
             FeedItems = FeedItems
@@ -38,6 +38,7 @@ public class IndexModel : PageModel
                 .ToList();
         }
     }
+
 
     public IActionResult OnPost(string feedUrl)
     {
