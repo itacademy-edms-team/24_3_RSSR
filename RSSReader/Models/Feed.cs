@@ -6,7 +6,7 @@
         public string Url { get; set; }
         public string Title { get; set; }
 
-        public FeedItem? FeedItem { get; set; }
-        public ICollection <Folder> Folder { get; set; }
+        public ICollection<FeedItem> FeedItems { get; set; }
+        public ICollection <Folder> Folders { get; set; }
     }
 }

@@ -1,16 +1,21 @@
-﻿using System.ServiceModel.Syndication;
+﻿using System;
+using System.ServiceModel.Syndication;
 using System.Xml;
+using Microsoft.VisualBasic.FileIO;
 using RSSReader.Models;
+using RSSReader.Services;
 
 namespace RSSReader.Services
 {
     public class RssParser
     {
-        public List<FeedItem> ParseFeed(string url)
+        public async Task<List<FeedItem>> ParseFeedAsync(string url)
         {
             try
             {
-                using (var reader = XmlReader.Create(url))
+                List<string> rssLinks = await RssDiscoverer.FindRssFeedsAsync(url);
+                string feedUrl = rssLinks.Any() ? rssLinks.First() : url;
+                using (var reader = XmlReader.Create(feedUrl))
                 {
                     var feed = SyndicationFeed.Load(reader);
                     return feed.Items.Select(item => new FeedItem
@@ -27,5 +32,6 @@ namespace RSSReader.Services
                 return new List<FeedItem>();
             }
         }
-    }
+    } 
 }
+

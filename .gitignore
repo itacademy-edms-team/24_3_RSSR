@@ -398,3 +398,6 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+/RSSReader/rssreader.db-wal
+/RSSReader/rssreader.db
+/RSSReader/rssreader.db-shm

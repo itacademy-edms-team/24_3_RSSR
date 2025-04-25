@@ -17,26 +17,33 @@ public class IndexModel : PageModel
         _storage = storage;
     }
 
-    public void OnGet(string searchQuery)
+    public async Task<List<FeedItem>> GetFeedItemsAsync()
     {
-       
-        FeedUrls = _storage.LoadFeeds();
-        FeedItems = FeedUrls
-            .Distinct() 
-            .SelectMany(url => _parser.ParseFeed(url))
-            .GroupBy(x => x.Link) 
-            .Select(g => g.First()) 
+        var feedUrls = _storage.LoadFeeds().Distinct();
+
+        var tasks = feedUrls.Select(url => _parser.ParseFeedAsync(url));
+        var results = await Task.WhenAll(tasks);
+
+        return results
+            .SelectMany(items => items)
+            .GroupBy(x => x.Link)
+            .Select(g => g.First())
             .OrderByDescending(i => i.PublishDate)
             .ToList();
+    }
 
-        //Логика поиска
-        if (!string.IsNullOrEmpty(searchQuery))
-        {
-            FeedItems = FeedItems
+    public async Task OnGetAsync(string searchQuery) 
+    {
+        FeedUrls = _storage.LoadFeeds();
+        var allItems = await GetFeedItemsAsync();
+
+ 
+        FeedItems = string.IsNullOrEmpty(searchQuery)
+            ? allItems
+            : allItems
                 .Where(i => i.Title.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
                            i.Description.Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
                 .ToList();
-        }
     }
 
 
