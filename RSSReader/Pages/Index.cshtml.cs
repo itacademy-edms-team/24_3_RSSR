@@ -1,60 +1,143 @@
-﻿using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using RSSReader.Data;
 using RSSReader.Models;
+using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 using RSSReader.Services;
 
 public class IndexModel : PageModel
 {
+    private readonly AppDbContext _context;
     private readonly RssParser _parser;
-    private readonly FeedStorage _storage;
 
+    [BindProperty(SupportsGet = true)]
+    public string SearchQuery { get; set; }
+
+    [BindProperty(SupportsGet = true)]
+    public bool HasImages { get; set; }
+    [BindProperty(SupportsGet = true)]
+    public bool WithoutImages { get; set; }
+
+    [BindProperty(SupportsGet = true)]
+    public int? LastDays { get; set; }
+
+    [BindProperty(SupportsGet = true)]
+    public string SortOrder { get; set; } = "date_desc";
     public List<FeedItem> FeedItems { get; set; } = new();
-    public List<string> FeedUrls { get; set; } = new();
+    public List<string> ActiveFilters { get; set; } = new();
+    public bool HasActiveFilters => ActiveFilters.Any();
 
-    public IndexModel(RssParser parser, FeedStorage storage)
+    public IndexModel(AppDbContext context, RssParser parser)
     {
+        _context = context;
         _parser = parser;
-        _storage = storage;
     }
 
-    public async Task<List<FeedItem>> GetFeedItemsAsync()
+    public async Task OnGetAsync()
     {
-        var feedUrls = _storage.LoadFeeds().Distinct();
 
-        var tasks = feedUrls.Select(url => _parser.ParseFeedAsync(url));
-        var results = await Task.WhenAll(tasks);
+        var feeds = await _context.Feeds.ToListAsync();
 
-        return results
-            .SelectMany(items => items)
-            .GroupBy(x => x.Link)
-            .Select(g => g.First())
-            .OrderByDescending(i => i.PublishDate)
-            .ToList();
-    }
-
-    public async Task OnGetAsync(string searchQuery) 
-    {
-        FeedUrls = _storage.LoadFeeds();
-        var allItems = await GetFeedItemsAsync();
-
- 
-        FeedItems = string.IsNullOrEmpty(searchQuery)
-            ? allItems
-            : allItems
-                .Where(i => i.Title.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
-                           i.Description.Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-    }
-
-
-    public IActionResult OnPost(string feedUrl)
-    {
-        if (Uri.TryCreate(feedUrl, UriKind.Absolute, out _))
+        foreach (var feed in feeds)
         {
-            var feeds = _storage.LoadFeeds();
-            feeds.Add(feedUrl);
-            _storage.SaveFeeds(feeds);
+            try
+            {
+                var newItems = await _parser.ParseFeedAsync(feed.Url);
+
+                foreach (var item in newItems.FeedItems)
+                {
+                    if (!await _context.FeedItems.AnyAsync(i => i.Link == item.Link))
+                    {
+                        item.FeedId = feed.FeedId;
+                        _context.FeedItems.Add(item);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка при обновлении ленты {feed.Url}: {ex.Message}");
+            }
         }
-        return RedirectToPage();
+
+        await _context.SaveChangesAsync();
+
+        var query = _context.FeedItems
+            .Include(i => i.Feed)
+            .AsQueryable();
+
+        ApplyFilters(ref query);
+        ApplySorting(ref query);
+
+        FeedItems = await query.ToListAsync();
+        BuildActiveFiltersList();
     }
+
+    private void ApplyFilters(ref IQueryable<FeedItem> query)
+    {
+
+        if (HasImages)
+        {
+            query = query.Where(i => i.Description != null &&
+               (i.Description.Contains("<img") ||
+                i.Description.Contains("<image") ||
+                i.Description.Contains("<picture")));
+        }
+
+        if (WithoutImages)
+        {
+            query = query.Where(i => i.Description != null &&
+               !(i.Description.Contains("<img") ||
+                i.Description.Contains("<image") ||
+                i.Description.Contains("<picture")));
+        }
+
+        if (LastDays.HasValue)
+            query = query.Where(i => i.PublishDate >= DateTime.Now.AddDays(-LastDays.Value));
+
+        if (!string.IsNullOrEmpty(SearchQuery))
+            query = query.Where(i =>
+                EF.Functions.Like(i.Title, $"%{SearchQuery}%") ||
+                EF.Functions.Like(i.Description, $"%{SearchQuery}%"));
+    }
+
+    private void ApplySorting(ref IQueryable<FeedItem> query)
+    {
+        switch (SortOrder)
+        {
+            case "date_desc":
+                query = query.OrderByDescending(i => i.PublishDate);
+                break;
+            case "date_asc":
+                query = query.OrderBy(i => i.PublishDate);
+                break;
+            case "title":
+                query = query.OrderBy(i => i.Title);
+                break;
+            case "title_desc":
+                query = query.OrderByDescending(i => i.Title);
+                break;
+            default:
+                query = query.OrderByDescending(i => i.PublishDate);
+                break;
+        }
+    }
+
+    private void BuildActiveFiltersList()
+    {
+
+        if (HasImages)
+            ActiveFilters.Add("С изображениями");
+
+        if (WithoutImages)
+            ActiveFilters.Add("Без изображений");
+
+        if (LastDays.HasValue)
+            ActiveFilters.Add($"Последние {LastDays} дней");
+
+        if (!string.IsNullOrEmpty(SearchQuery))
+            ActiveFilters.Add($"Поиск: '{SearchQuery}'");
+    }
+
 }

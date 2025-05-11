@@ -13,7 +13,6 @@ namespace RSSReader.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            //feed
             modelBuilder.Entity<Feed>()
                         .HasKey(f => f.FeedId);
 
@@ -25,7 +24,6 @@ namespace RSSReader.Data
                 .WithOne(i => i.Feed)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            //folder
             modelBuilder.Entity<Folder>()
             .HasKey(f => f.FolderId);
 
@@ -36,7 +34,6 @@ namespace RSSReader.Data
                 .HasMany(f => f.Feeds)
                 .WithMany(f => f.Folders);
 
-            //feedItem
             modelBuilder.Entity<FeedItem>()
             .HasKey(f => f.FeedItemId);
 

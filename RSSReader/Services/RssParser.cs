@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Security.Policy;
 using System.ServiceModel.Syndication;
 using System.Xml;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic.FileIO;
+using RSSReader.Data;
 using RSSReader.Models;
 using RSSReader.Services;
 
@@ -9,29 +12,32 @@ namespace RSSReader.Services
 {
     public class RssParser
     {
-        public async Task<List<FeedItem>> ParseFeedAsync(string url)
+
+        public async Task<Feed> ParseFeedAsync(string feedUrl)
         {
-            try
+            List<string> rssLinks = await RssDiscoverer.FindRssFeedsAsync(feedUrl);
+            string foundfeedUrl = rssLinks.Any() ? rssLinks.First() : feedUrl;
+            using var reader = XmlReader.Create(foundfeedUrl);
+            var syndicationFeed = SyndicationFeed.Load(reader);
+            string imageUrl = syndicationFeed.ImageUrl?.ToString() ?? "";
+
+            var feed = new Feed
             {
-                List<string> rssLinks = await RssDiscoverer.FindRssFeedsAsync(url);
-                string feedUrl = rssLinks.Any() ? rssLinks.First() : url;
-                using (var reader = XmlReader.Create(feedUrl))
+                Url = foundfeedUrl,
+                Title = syndicationFeed.Title?.Text ?? foundfeedUrl,
+                Description = syndicationFeed.Description?.Text ?? foundfeedUrl,
+                ImageUrl = imageUrl,
+                FeedItems = syndicationFeed.Items.Select(item => new FeedItem
                 {
-                    var feed = SyndicationFeed.Load(reader);
-                    return feed.Items.Select(item => new FeedItem
-                    {
-                        Title = item.Title?.Text ?? "Без заголовка",
-                        Description = item.Summary?.Text ?? "Описание отсутствует",
-                        PublishDate = item.PublishDate.DateTime,
-                        Link = item.Links?.FirstOrDefault()?.Uri?.ToString() ?? "#"
-                    }).ToList();
-                }
-            }
-            catch
-            {
-                return new List<FeedItem>();
-            }
+                    Title = item.Title.Text,
+                    Description = item.Summary?.Text ?? "",
+                    PublishDate = item.PublishDate.DateTime,
+                    Link = item.Links.FirstOrDefault()?.Uri.ToString() ?? ""
+                }).ToList()
+            };
+            
+            return feed;
         }
-    } 
+    }
 }
 

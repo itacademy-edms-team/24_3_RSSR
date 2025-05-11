@@ -1,0 +1,92 @@
+﻿@page
+@model FoldersModel
+@{
+    ViewData["Title"] = "Папки";
+}
+
+<div class="container mt-4">
+    <form method="post" asp-page-handler="Add" class="mb-3 d-flex gap-2">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createFolderModal">
+            <i class="bi bi-folder-plus"></i> Новая папка
+        </button>
+    </form>
+    <div class="modal fade" id="createFolderModal" tabindex="-1" aria-labelledby="createFolderModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <form method="post" asp-page-handler="Add">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="createFolderModalLabel">Создать новую папку</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="NewFolderName" class="form-label">Название папки</label>
+                            <input type="text" name="NewFolderName" class="form-control" id="NewFolderName" required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Выберите ленты для добавления</label>
+                            <div class="row">
+                                @foreach (var feed in Model.AllFeeds)
+                                {
+                                    <div class="col-6 col-md-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox"
+                                                   name="SelectedFeedIds"
+                                                   value="@feed.FeedId"
+                                                   id="feedCheck_@feed.FeedId"
+                                            @(Model.SelectedFeedIds.Contains(feed.FeedId) ? "checked" : "") />
+                                            <label class="form-check-label" for="feedCheck_@feed.FeedId">
+                                                @feed.Title
+                                            </label>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-primary">Создать</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @if (!Model.Folders.Any())
+    {
+        <div class="alert alert-info">Папок пока нет.</div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var folder in Model.Folders)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="folder-card p-4 position-relative">
+                        <h5 class="folder-title">@folder.FolderName</h5>
+                        <div class="folder-info text-muted mb-3">Лент: @folder.Feeds.Count</div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a asp-page="/ManageFeedsInFolder"
+                               asp-route-folderId="@folder.FolderId"
+                               class="btn btn-sm btn-outline-primary">
+                                Открыть
+                            </a>
+                            <form method="post" asp-page-handler="Delete" asp-route-id="@folder.FolderId"  class="mb-0 ms-2">
+                                <button type="submit" class="btn btn-sm delete-btn" title="Удалить">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
+                                        <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            }
+        </div>
+    }
+</div>

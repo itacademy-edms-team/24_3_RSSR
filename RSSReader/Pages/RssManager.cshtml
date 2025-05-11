@@ -1,0 +1,148 @@
+﻿@page
+@using System.Text.RegularExpressions
+@model RssManagerModel 
+@{  
+}
+
+<div class="container mt-4">
+    <div class="container mt-4">
+        <form method="post" class="mb-4">
+            <div class="input-group">
+                <input type="url" class="form-control" name="FeedUrl" placeholder="https://example.com/rss" required>
+                <button type="submit" class="btn btn-primary">Добавить</button>
+            </div>
+
+        </form>
+
+    </div>
+
+    @if (!Model.Feeds.Any())
+    {
+        <div class="empty-state">
+            <p>Вы ещё не добавили ни одной RSS-ленты.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var item in Model.Feeds)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100" style="overflow:hidden;">
+                        <div class="card-body rss-card d-flex flex-column">
+                            <div class="mb-3 d-flex justify-content-center">
+                                @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                {
+                                    <img src="@item.ImageUrl" alt="Аватар канала" style="width:64px; height:64px; object-fit:cover; border-radius:8px;" />
+                                }
+                                else
+                                {
+                                    <span class="default-avatar" style="width:64px; height:64px; display:inline-block; color:#6c757d;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16">
+                                            <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0" />
+                                            <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1" />
+                                        </svg>
+                                    </span>
+                                }
+                            </div>
+
+                            <h5 class="card-title justify-content-center">@Html.Raw(item.Title)</h5>
+                            <div class="card-text mb-2 flex-grow-1">
+                                @Html.Raw(CleanDescription(item.Description))
+                            </div>
+                            <div class="mt-auto input-group">
+                                <button type="button"
+                                        class="btn btn-primary"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#feedItemsModal"
+                                        data-feed-id="@item.FeedId"
+                                        data-feed-title="@item.Title">
+                                    Открыть
+                                </button>
+
+                            </div>
+                            <form method="post" asp-page-handler="DeleteFeed">
+                                <input type="hidden" name="feedId" value="@item.FeedId" />
+                                <button class="delete-btn" onclick="deleteFeed(@item.FeedId)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
+                                        <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+                                    </svg>
+                                </button>
+                             </form>
+                            
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<div class="modal fade" id="feedItemsModal" tabindex="-1" aria-labelledby="feedItemsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="feedItemsModalLabel">Новости ленты</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body" id="feedItemsModalBody">
+                <div class="text-center text-muted">Загрузка новостей...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@functions {
+
+    string CleanDescription(string description)
+    {
+        if (string.IsNullOrEmpty(description))
+            return string.Empty;
+
+
+        var withoutTags = Regex.Replace(description, "<. *?>", string.Empty);
+        return Regex.Replace(withoutTags, @"\s+", " ").Trim();
+    }
+}
+
+@section Scripts {
+    <script>
+        document.getElementById('feedItemsModal').addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var feedId = button.getAttribute('data-feed-id');
+            var feedTitle = button.getAttribute('data-feed-title');
+            document.getElementById('feedItemsModalLabel').textContent = 'Новости ленты: ' + feedTitle;
+            var modalBody = document.getElementById('feedItemsModalBody');
+            modalBody.innerHTML = '<div class="text-center text-muted">Загрузка новостей...</div>';
+            fetch(`/RssManager?handler=FeedItemsJson&feedId=${feedId}`)
+                .then(response => response.json())
+                .then(items => {
+                    if (!items || items.length === 0) {
+                        modalBody.innerHTML = '<div class="alert alert-info">Новостей нет.</div>';
+                        return;
+                    }
+                    let html = '<div class="feed-modal-card">';
+                    items.forEach(item => {
+                        html += `
+                        <div class="card mb-3 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">${item.title}</h5>
+                                ${item.description ? `<div class="card-text mb-2">${item.description}</div>` : ''}
+                                <a href="${item.link}" target="_blank" class="btn btn-outline-primary btn-sm">Читать полностью</a>
+                            </div>
+                        </div>
+                        `;
+                    });
+                    html += '</div>';
+                    modalBody.innerHTML = html;
+                })
+                .catch(() => {
+                    modalBody.innerHTML = '<div class="alert alert-danger">Ошибка загрузки новостей.</div>';
+                });
+        });
+    </script>
+}
+
+

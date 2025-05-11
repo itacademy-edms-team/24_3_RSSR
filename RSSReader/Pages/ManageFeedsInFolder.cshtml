@@ -1,0 +1,33 @@
+﻿@page "{folderId:int}"
+@model ManageFeedsInFolderModel
+@{
+    ViewData["Title"] = "Управление содержимым папки";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">@Model.Folder.FolderName</h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                <ul class="list-group mb-3">
+                    @foreach (var feed in Model.AllFeeds)
+                    {
+                        <li class="list-group-item d-flex align-items-center">
+                            <input class="form-check-input me-2"
+                                   type="checkbox"
+                                   name="selectedFeedIds"
+                                   value="@feed.FeedId"
+                            @(Model.Folder.Feeds.Any(f => f.FeedId == feed.FeedId) ? "checked" : "") />
+                            <img src="@feed.ImageUrl" alt="" width="32" height="32" class="me-2 rounded" onerror="this.style.display='none'" />
+                            <span>@feed.Title</span>
+                        </li>
+                    }
+                </ul>
+                <button type="submit" class="btn btn-success">Сохранить</button>
+                <a asp-page="/Folders" class="btn btn-secondary ms-2">Назад</a>
+            </form>
+        </div>
+    </div>
+</div>

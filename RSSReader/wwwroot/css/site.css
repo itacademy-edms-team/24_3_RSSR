@@ -1,22 +1,132 @@
 html {
-  font-size: 14px;
+    font-size: 14px;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    html {
+        font-size: 16px;
+    }
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
 html {
-  position: relative;
-  min-height: 100%;
+    position: relative;
+    min-height: 100%;
 }
 
 body {
-  margin-bottom: 60px;
+    margin-bottom: 60px;
 }
+
+.navbar-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center; 
+    gap: 20px;
+}
+
+
+.nav-item svg {
+    width: 24px;
+    height: 24px;
+}
+
+.card {
+    position: relative;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.card-body img, .card-text img, .modal-body img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0.5rem auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.edit-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: black;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.delete-btn {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #ff4444;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.delete-btn:hover, edit-btn:hover {
+    opacity: 1;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    margin: 2rem 0;
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+}
+
+    .empty-state p {
+        color: #666;
+        margin-bottom: 1rem;
+    }
+
+.modal-content {
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(8px);
+    border-radius: 24px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+}
+
+.folder-card {
+    position: relative;
+    top: 10px;
+    background: linear-gradient(135deg, #fffbe7 0%, #fffbe7 80%, #fff9c4 100%);
+    border-radius: 8px 8px 12px 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    cursor: pointer;
+    min-height: 150px;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+
+    .folder-card:hover {
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        transform: translateY(-5px);
+    }
+
+    .folder-card > * {
+        position: relative;
+        z-index: 2;
+    }
+
+.folder-title {
+    font-weight: 600;
+    font-size: 1.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.folder-info {
+    font-size: 0.9rem;
+}
+
