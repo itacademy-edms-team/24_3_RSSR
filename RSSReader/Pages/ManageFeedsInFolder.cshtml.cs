@@ -1,15 +1,15 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using RSSReader.Data;
 using RSSReader.Models;
+using RSSReader.Services;
 
 public class ManageFeedsInFolderModel : PageModel
 {
-    private readonly AppDbContext _context;
-    public ManageFeedsInFolderModel(AppDbContext context) 
+    private readonly FolderService _folderService;
+
+    public ManageFeedsInFolderModel(FolderService folderService)
     {
-        _context = context;
+        _folderService = folderService;
     }
 
     [BindProperty]
@@ -21,39 +21,16 @@ public class ManageFeedsInFolderModel : PageModel
 
     public async Task<IActionResult> OnGetAsync(int folderId)
     {
-        Folder = await _context.Folders
-            .Include(f => f.Feeds)
-            .FirstOrDefaultAsync(f => f.FolderId == folderId);
-
+        Folder = await _folderService.GetFolderWithFeedsAsync(folderId);
         if (Folder == null) return NotFound();
 
-        AllFeeds = await _context.Feeds.ToListAsync();
+        AllFeeds = await _folderService.GetAllFeedsAsync();
         return Page();
     }
 
     public async Task<IActionResult> OnPostAsync(int folderId)
     {
-        Folder = await _context.Folders
-            .Include(f => f.Feeds)
-            .FirstOrDefaultAsync(f => f.FolderId == folderId);
-
-        if (Folder == null) return NotFound();
-
-        AllFeeds = await _context.Feeds.ToListAsync();
-
-
-        Folder.Feeds.Clear();
-        if (SelectedFeedIds != null && SelectedFeedIds.Any())
-        {
-            var selectedFeeds = await _context.Feeds
-                .Where(f => SelectedFeedIds.Contains(f.FeedId))
-                .ToListAsync();
-
-            foreach (var feed in selectedFeeds)
-                Folder.Feeds.Add(feed);
-        }
-
-        await _context.SaveChangesAsync();
+        await _folderService.UpdateFolderFeedsAsync(folderId, SelectedFeedIds);
         TempData["Message"] = "Список фидов обновлен!";
         return RedirectToPage(new { folderId });
     }

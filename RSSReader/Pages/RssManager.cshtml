@@ -3,6 +3,7 @@
 @model RssManagerModel 
 @{  
 }
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 
 <div class="container mt-4">
     <div class="container mt-4">
@@ -108,41 +109,7 @@
 }
 
 @section Scripts {
-    <script>
-        document.getElementById('feedItemsModal').addEventListener('show.bs.modal', function (event) {
-            var button = event.relatedTarget;
-            var feedId = button.getAttribute('data-feed-id');
-            var feedTitle = button.getAttribute('data-feed-title');
-            document.getElementById('feedItemsModalLabel').textContent = 'Новости ленты: ' + feedTitle;
-            var modalBody = document.getElementById('feedItemsModalBody');
-            modalBody.innerHTML = '<div class="text-center text-muted">Загрузка новостей...</div>';
-            fetch(`/RssManager?handler=FeedItemsJson&feedId=${feedId}`)
-                .then(response => response.json())
-                .then(items => {
-                    if (!items || items.length === 0) {
-                        modalBody.innerHTML = '<div class="alert alert-info">Новостей нет.</div>';
-                        return;
-                    }
-                    let html = '<div class="feed-modal-card">';
-                    items.forEach(item => {
-                        html += `
-                        <div class="card mb-3 shadow-sm">
-                            <div class="card-body">
-                                <h5 class="card-title">${item.title}</h5>
-                                ${item.description ? `<div class="card-text mb-2">${item.description}</div>` : ''}
-                                <a href="${item.link}" target="_blank" class="btn btn-outline-primary btn-sm">Читать полностью</a>
-                            </div>
-                        </div>
-                        `;
-                    });
-                    html += '</div>';
-                    modalBody.innerHTML = html;
-                })
-                .catch(() => {
-                    modalBody.innerHTML = '<div class="alert alert-danger">Ошибка загрузки новостей.</div>';
-                });
-        });
-    </script>
+    <script src="~/js/RssManager.js"></script>
 }
 
 

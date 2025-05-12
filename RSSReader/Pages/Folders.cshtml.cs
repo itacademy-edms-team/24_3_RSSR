@@ -1,17 +1,15 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using RSSReader.Data;
 using RSSReader.Models;
-using Microsoft.EntityFrameworkCore;
+using RSSReader.Services;
 
 public class FoldersModel : PageModel
 {
-    private readonly AppDbContext _context;
+    private readonly FolderService _folderService;
 
-    public FoldersModel(AppDbContext context)
+    public FoldersModel(FolderService folderService)
     {
-        _context = context;
+        _folderService = folderService;
     }
 
     public List<Folder> Folders { get; set; } = new();
@@ -26,8 +24,8 @@ public class FoldersModel : PageModel
 
     public async Task OnGetAsync()
     {
-        Folders = await _context.Folders.Include(f => f.Feeds).ToListAsync();
-        AllFeeds = await _context.Feeds.ToListAsync();
+        Folders = await _folderService.GetAllFoldersWithFeedsAsync();
+        AllFeeds = await _folderService.GetAllFeedsAsync();
     }
 
     public async Task<IActionResult> OnPostAddAsync()
@@ -39,28 +37,13 @@ public class FoldersModel : PageModel
             return Page();
         }
 
-        var folder = new Folder { FolderName = NewFolderName };
-
-        if (SelectedFeedIds != null && SelectedFeedIds.Any())
-        {
-            folder.Feeds = await _context.Feeds
-                .Where(f => SelectedFeedIds.Contains(f.FeedId))
-                .ToListAsync();
-        }
-
-        _context.Folders.Add(folder);
-        await _context.SaveChangesAsync();
-
+        await _folderService.AddFolderAsync(NewFolderName, SelectedFeedIds);
         return RedirectToPage();
     }
+
     public async Task<IActionResult> OnPostDeleteAsync(int id)
     {
-        var folder = await _context.Folders.FindAsync(id);
-        if (folder != null)
-        {
-            _context.Folders.Remove(folder);
-            await _context.SaveChangesAsync();
-        }
+        await _folderService.DeleteFolderAsync(id);
         return RedirectToPage();
     }
 }

@@ -7,6 +7,9 @@ builder.Services.AddRazorPages();
 builder.Services.AddScoped<RssParser>();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<RssDiscoverer>();
+builder.Services.AddScoped<FeedItemService>();
+builder.Services.AddScoped<FeedManagerService>();
+builder.Services.AddScoped<FolderService>();
 
 
 builder.Services.AddDbContext<AppDbContext>(options =>
