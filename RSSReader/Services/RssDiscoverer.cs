@@ -2,45 +2,57 @@
 using System.Xml;
 using HtmlAgilityPack;
 
-public class RssDiscoverer
+
+namespace RSSReader.Services
 {
-    public static async Task<List<string>> FindRssFeedsAsync(string url)
+    /// <summary>
+    /// Сервис для поиска RSS-лент на веб-страницах.
+    /// Основное назначение: анализ HTML для обнаружения ссылок на RSS-фиды.
+    /// 
+    /// Функции:
+    /// - Парсинг HTML страницы на наличие тегов link с RSS-атрибутами
+    /// - Фильтрация валидных RSS-ссылок
+
+    public class RssDiscoverer
     {
-        List<string> rssFeeds = new List<string>();
-
-        try
+        public async Task<List<string>> FindRssFeedsAsync(string url)
         {
-            using (HttpClient client = new HttpClient())
+            List<string> rssFeeds = new List<string>();
+
+            try
             {
-                
-                HttpResponseMessage response = await client.GetAsync(url);
-                response.EnsureSuccessStatusCode(); 
-                string html = await response.Content.ReadAsStringAsync();
-
-                HtmlDocument doc = new HtmlDocument();
-                doc.LoadHtml(html);
-
-                var linkTags = doc.DocumentNode.SelectNodes("//link[@rel='alternate' and @type='application/rss+xml']");
-
-                if (linkTags != null)
+                using (HttpClient client = new HttpClient())
                 {
-                    foreach (var linkTag in linkTags)
+
+                    HttpResponseMessage response = await client.GetAsync(url);
+                    response.EnsureSuccessStatusCode();
+                    string html = await response.Content.ReadAsStringAsync();
+
+                    HtmlDocument doc = new HtmlDocument();
+                    doc.LoadHtml(html);
+
+                    var linkTags = doc.DocumentNode.SelectNodes("//link[@rel='alternate' and @type='application/rss+xml']");
+
+                    if (linkTags != null)
                     {
-                        string hrefValue = linkTag.GetAttributeValue("href", string.Empty);
-                        if (!string.IsNullOrEmpty(hrefValue))
+                        foreach (var linkTag in linkTags)
                         {
-                            rssFeeds.Add(hrefValue);
-                            Console.WriteLine(hrefValue);
+                            string hrefValue = linkTag.GetAttributeValue("href", string.Empty);
+                            if (!string.IsNullOrEmpty(hrefValue))
+                            {
+                                rssFeeds.Add(hrefValue);
+                                Console.WriteLine(hrefValue);
+                            }
                         }
                     }
                 }
             }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Ошибка нахождения RSS feeds: {ex.Message}");
-        }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка нахождения RSS feeds: {ex.Message}");
+            }
 
-        return rssFeeds;
+            return rssFeeds;
+        }
     }
 }

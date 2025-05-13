@@ -4,6 +4,14 @@ using RSSReader.Models;
 
 namespace RSSReader.Services
 {
+    /// <summary>
+    /// Сервис работы с новостными записями RSS-лент.
+    /// Основное назначение: управление коллекцией новостей.
+    /// 
+    /// Функции:
+    /// - Массовое обновление новостей из всех лент
+    /// - Фильтрация и сортировка новостей
+    /// - Поиск по содержимому
     public class FeedItemService
     {
         private readonly AppDbContext _context;

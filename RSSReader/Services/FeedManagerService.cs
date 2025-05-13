@@ -4,6 +4,15 @@ using RSSReader.Models;
 
 namespace RSSReader.Services
 {
+    /// <summary>
+    /// Сервис управления RSS-лентами.
+    /// Основное назначение: координация операций с лентами.
+    /// 
+    /// Функции:
+    /// - Добавление/удаление RSS-лент
+    /// - Валидация URL лент
+    /// - Проверка на дубликаты
+    /// - Предоставление списка всех лент
     public class FeedManagerService
     {
         private readonly AppDbContext _context;

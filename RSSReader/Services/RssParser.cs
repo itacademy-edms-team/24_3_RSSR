@@ -10,12 +10,26 @@ using RSSReader.Services;
 
 namespace RSSReader.Services
 {
+    /// <summary>
+    /// Сервис преобразования RSS-фидов в доменные модели.
+    /// Основное назначение: парсинг XML-фидов и нормализация данных.
+    /// 
+    /// Функции:
+    /// - Чтение и валидация RSS
+    /// - Преобразование элементов фида в единый формат
+    /// - Извлечение изображений (если присутствуют)
     public class RssParser
     {
+        private readonly RssDiscoverer _discoverer;
+        public RssParser(RssDiscoverer discoverer)
+        {
+            _discoverer = discoverer;
+        }
 
         public async Task<Feed> ParseFeedAsync(string feedUrl)
         {
-            List<string> rssLinks = await RssDiscoverer.FindRssFeedsAsync(feedUrl);
+
+            List<string> rssLinks = await _discoverer.FindRssFeedsAsync(feedUrl);
             string foundfeedUrl = rssLinks.Any() ? rssLinks.First() : feedUrl;
             using var reader = XmlReader.Create(foundfeedUrl);
             var syndicationFeed = SyndicationFeed.Load(reader);

@@ -5,15 +5,21 @@ using RSSReader.Models;
 
 namespace RSSReader.Services
 {
+    /// <summary>
+    /// Сервис для организации RSS-лент в папки.
+    /// Основное назначение: категоризация лент пользователем.
+    /// 
+    /// Функции:
+    /// - Создание/удаление папок
+    /// - Назначение лент папкам
+    /// - Обновление состава папок
     public class FolderService
     {
         private readonly AppDbContext _context;
-        private readonly RssParser _parser;
 
-        public FolderService(AppDbContext context, RssParser parser)
+        public FolderService(AppDbContext context)
         {
             _context = context;
-            _parser = parser;
         }
 
         public async Task AddFolderAsync(string NewFolderName, List<int> SelectedFeedIds)
