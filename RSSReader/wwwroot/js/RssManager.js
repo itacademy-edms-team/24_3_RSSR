@@ -33,3 +33,22 @@
         modalBody.innerHTML = '<div class="alert alert-danger">Ошибка загрузки новостей.</div>';
     }
 });
+
+document.addEventListener('DOMContentLoaded', function () {
+    const editModal = document.getElementById('editFeedModal');
+
+    if (editModal) {
+        editModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+
+            const feedId = button.getAttribute('data-feed-id');
+            const feedTitle = button.getAttribute('data-feed-title');
+            const feedDescription = button.getAttribute('data-feed-description');
+
+            document.getElementById('editFeedId').value = feedId;
+            document.getElementById('editFeedTitle').value = feedTitle;
+            document.getElementById('editFeedDescription').value = feedDescription || '';
+
+        });
+    }
+});

@@ -9,7 +9,7 @@ namespace RSSReader.Services
     /// Основное назначение: координация операций с лентами.
     /// 
     /// Функции:
-    /// - Добавление/удаление RSS-лент
+    /// - Добавление/удаление RSS-лент/редактирование RSS-лент
     /// - Валидация URL лент
     /// - Проверка на дубликаты
     /// - Предоставление списка всех лент
@@ -61,6 +61,19 @@ namespace RSSReader.Services
             };
 
             _context.Feeds.Add(feed);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> EditFeedAsync(int feedId, string newTitle, string newDescription)
+        {
+            var feed = await _context.Feeds.FindAsync(feedId);
+            if (feed == null)
+                return false;
+
+            feed.Title = newTitle;
+            feed.Description = newDescription;
+
             await _context.SaveChangesAsync();
             return true;
         }

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc;
 using RSSReader.Models;
 using RSSReader.Services;
+using Microsoft.EntityFrameworkCore;
 
 public class RssManagerModel : PageModel
 {
@@ -28,6 +29,14 @@ public class RssManagerModel : PageModel
     public async Task<IActionResult> OnPostAsync(string feedUrl)
     {
         if (await _feedManager.AddFeedAsync(feedUrl))
+            return RedirectToPage();
+
+        return Page();
+    }
+
+    public async Task<IActionResult> OnPostUpdateFeed(int feedId, string title, string description)
+    {
+        if (await _feedManager.EditFeedAsync(feedId, title, description))
             return RedirectToPage();
 
         return Page();
